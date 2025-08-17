@@ -27,11 +27,34 @@
     .moyenne { color: #ffb300; font-weight: bold; margin-left: 10px; }
     .empty { color: #888; text-align: center; margin-top: 40px; }
     #error-message { color: red; margin-top: 20px; }
+
+        .btn {
+      display: block;
+      margin: 20px auto 0 auto;
+      padding: 18px 40px;
+      font-size: 1.5em;
+      background: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 2px 8px #4caf5033;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: #45a049;
+    }
   </style>
 </head>
 <body>
   <h1>Liste des Mobil-Homes</h1>
+        <button class="btn" onclick="window.open('https://nonodev38.github.io/check_mobil_home/', 'listeMobilHomeWindow')">
+    Ouvrir Check MobilHome
+  </button>
   <div class="container">
+
     <!-- 🔍 Barre de recherche avec bouton toggle -->
     <div class="search-bar">
     <input type="text" id="searchInput" placeholder="Rechercher par numéro...">
@@ -40,12 +63,19 @@
 
     <div id="listview" class="listview"></div>
     <div id="error-message"></div>
+
+
+
   </div>
 
   <script>
+
+
     const URL = "https://script.google.com/macros/s/AKfycbzo8UtXs31KSDYJruqOzV1NPd2wwrW5Kw7Wmj8-HJmGin93IpmnEjufB7F48EnGoX-A/exec";
     let allRows = []; // stocke toutes les données brutes
     let filterMode = "numero"; // 🔄 mode de recherche par défaut
+
+
 
     async function fetchData() {
       const errorDiv = document.getElementById("error-message");
