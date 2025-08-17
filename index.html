@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Liste Mobil-Home</title>
+  <style>
+    body { font-family: sans-serif; background: #f7f9fc; margin: 0; padding: 0; }
+    h1 { text-align: center; margin-top: 30px; color: #1976d2; }
+    .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px #1976d233; padding: 30px; }
+    .search-bar { margin-bottom: 20px; text-align: center; }
+    .search-bar input {
+      width: 50%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 8px;
+      font-size: 1em; outline: none;
+    }
+    .search-bar button {
+      margin-left: 10px; padding: 10px 15px; border: none; border-radius: 8px;
+      background: #1976d2; color: white; font-size: 0.95em; cursor: pointer;
+    }
+    .search-bar button:hover { background: #125a9c; }
+    .listview { margin-top: 20px; }
+    .type-title { font-size: 1.3em; color: #1976d2; margin-top: 30px; }
+    .numero-block { margin: 18px 0 28px 0; padding: 16px 24px; background: #e3f2fd; border-radius: 8px; }
+    .numero-title { font-size: 1.1em; color: #333; margin-bottom: 8px; }
+    .famille-title { font-weight: bold; color: #1565c0; margin-top: 10px; }
+    .sousfamille-list { margin-left: 18px; }
+    .sousfamille-item { margin: 4px 0; color: #444; }
+    .moyenne { color: #ffb300; font-weight: bold; margin-left: 10px; }
+    .empty { color: #888; text-align: center; margin-top: 40px; }
+    #error-message { color: red; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Liste des Mobil-Homes</h1>
+  <div class="container">
+    <!-- 🔍 Barre de recherche avec bouton toggle -->
+    <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Rechercher par numéro...">
+    <button id="toggleFilter">Filtrer par famille</button>
+    </div>
+
+    <div id="listview" class="listview"></div>
+    <div id="error-message"></div>
+  </div>
+
+  <script>
+    const URL = "https://script.google.com/macros/s/AKfycbzo8UtXs31KSDYJruqOzV1NPd2wwrW5Kw7Wmj8-HJmGin93IpmnEjufB7F48EnGoX-A/exec";
+    let allRows = []; // stocke toutes les données brutes
+    let filterMode = "numero"; // 🔄 mode de recherche par défaut
+
+    async function fetchData() {
+      const errorDiv = document.getElementById("error-message");
+      errorDiv.textContent = "";
+      try {
+        const res = await fetch(URL);
+        if (!res.ok) {
+          const text = await res.text();
+          errorDiv.textContent = `Erreur de connexion : ${res.status} ${res.statusText}\nRéponse brute : ${text}`;
+          return [];
+        }
+        try {
+          const data = await res.json();
+          const rows = Array.isArray(data) ? data : (data.values ? data.values : []);
+          return rows.filter(r => r[0] !== undefined && r[1] !== undefined && r[0] !== "" && r[1] !== "").slice(1);
+        } catch (jsonErr) {
+          const text = await res.text();
+          errorDiv.textContent = "Erreur lors du parsing JSON : " + jsonErr + "\nRéponse brute : " + text;
+          return [];
+        }
+      } catch (err) {
+        errorDiv.textContent = "Erreur de connexion au serveur Google Apps Script : " + err;
+        return [];
+      }
+    }
+
+    function renderListview(rows) {
+      if (!rows.length) {
+        document.getElementById("listview").innerHTML = '<div class="empty">Aucune donnée disponible.</div>';
+        return;
+      }
+      rows.sort((a, b) => {
+        return String(a[0]).localeCompare(String(b[0])) ||
+               String(a[1]).localeCompare(String(b[1])) ||
+               String(a[2]).localeCompare(String(b[2])) ||
+               String(a[3] || "").localeCompare(String(b[3] || ""));
+      });
+
+      const listview = document.getElementById("listview");
+      listview.innerHTML = "";
+      let currentType = "", currentNumero = "";
+      let numeroBlock = null;
+      let familles = {};
+
+      rows.forEach((row) => {
+        const [type, numero, famille, sousfamille] = row;
+
+        if (type !== currentType) {
+          listview.innerHTML += `<div class="type-title">${type}</div>`;
+          currentType = type;
+          currentNumero = "";
+        }
+        if (numero !== currentNumero) {
+          numeroBlock = document.createElement("div");
+          numeroBlock.className = "numero-block";
+          numeroBlock.innerHTML = `<div class="numero-title">Numéro : ${numero}</div>`;
+          listview.appendChild(numeroBlock);
+          familles = {};
+          currentNumero = numero;
+        }
+        if (famille && famille !== "MOYENNE") {
+          if (!familles[famille]) {
+            familles[famille] = document.createElement("div");
+            familles[famille].innerHTML = `<div class="famille-title">${famille}</div><ul class="sousfamille-list"></ul>`;
+            numeroBlock.appendChild(familles[famille]);
+          }
+          if (sousfamille) {
+            const ul = familles[famille].querySelector(".sousfamille-list");
+            ul.innerHTML += `<li class="sousfamille-item">${sousfamille}</li>`;
+          }
+        }
+      });
+    }
+
+    // 🔍 Recherche en fonction du mode
+    function applyFilter(query) {
+      if (!query) {
+        renderListview(allRows);
+      } else {
+        let filtered;
+        if (filterMode === "numero") {
+          filtered = allRows.filter(r => String(r[1]).toLowerCase().includes(query));
+        } else {
+          filtered = allRows.filter(r => String(r[2]).toLowerCase().includes(query));
+        }
+        renderListview(filtered);
+      }
+    }
+
+// 🎛 Toggle du filtre
+document.getElementById("toggleFilter").addEventListener("click", () => {
+  filterMode = filterMode === "numero" ? "famille" : "numero";
+
+  // Mise à jour du bouton et du placeholder
+  document.getElementById("toggleFilter").textContent =
+    filterMode === "numero" ? "Filtrer par famille" : "Filtrer par numéro";
+  document.getElementById("searchInput").placeholder =
+    filterMode === "numero" ? "Rechercher par numéro..." : "Rechercher par famille...";
+
+  // Relancer le filtre sur la nouvelle base
+  applyFilter(document.getElementById("searchInput").value.trim().toLowerCase());
+});
+
+    // ⌨ Recherche en temps réel
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      const query = e.target.value.trim().toLowerCase();
+      applyFilter(query);
+    });
+
+    // Appel initial + rafraîchissement
+    fetchData().then(rows => {
+      allRows = rows;
+      renderListview(allRows);
+    });
+    setInterval(() => {
+      fetchData().then(rows => {
+        allRows = rows;
+        renderListview(allRows);
+      });
+    }, 30000);
+  </script>
+</body>
+</html>
