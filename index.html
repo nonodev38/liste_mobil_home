@@ -266,7 +266,15 @@ function renderListview(rows) {
 
   // Affichage
   let lastType = null;
-  Object.keys(regrouped).sort().forEach(key => {
+  Object.keys(regrouped)
+    .sort((a, b) => {
+      // Trie d'abord par type (MH/CH), puis par numéro croissant
+      const [typeA, numA] = a.split("|||");
+      const [typeB, numB] = b.split("|||");
+      if (typeA !== typeB) return typeA.localeCompare(typeB);
+      return Number(numA) - Number(numB);
+    })
+    .forEach(key => {
     const [type, numero] = key.split("|||");
 
     // Type title
