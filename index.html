@@ -11,11 +11,13 @@
       margin: 0;
       padding: 0;
     }
+
     h1 {
       text-align: center;
       margin-top: 30px;
       color: #1976d2;
     }
+
     .container {
       max-width: 900px;
       margin: 40px auto;
@@ -24,10 +26,12 @@
       box-shadow: 0 2px 16px #1976d233;
       padding: 30px;
     }
+
     .search-bar {
       margin-bottom: 20px;
       text-align: center;
     }
+
     .search-bar input {
       width: 50%;
       padding: 10px 15px;
@@ -36,6 +40,7 @@
       font-size: 1em;
       outline: none;
     }
+
     .search-bar button {
       margin-left: 10px;
       padding: 10px 15px;
@@ -46,19 +51,49 @@
       font-size: 0.95em;
       cursor: pointer;
     }
-    .search-bar button:hover { background: #125a9c; }
-    .listview { margin-top: 20px; }
-    .type-title { font-size: 1.3em; color: #1976d2; margin-top: 30px; }
+
+    .search-bar button:hover {
+      background: #125a9c;
+    }
+
+    .listview {
+      margin-top: 20px;
+    }
+
+    .type-title {
+      font-size: 1.3em;
+      color: #1976d2;
+      margin-top: 30px;
+    }
+
     .numero-block {
       margin: 18px 0 28px 0;
       padding: 16px 24px;
       background: #e3f2fd;
       border-radius: 8px;
     }
-    .numero-title { font-size: 1.1em; color: #333; margin-bottom: 8px; }
-    .famille-title { font-weight: bold; color: #1565c0; margin-top: 10px; }
-    .sousfamille-list { margin-left: 18px; }
-    .sousfamille-item { margin: 4px 0; color: #444; }
+
+    .numero-title {
+      font-size: 1.1em;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .famille-title {
+      font-weight: bold;
+      color: #1565c0;
+      margin-top: 10px;
+    }
+
+    .sousfamille-list {
+      margin-left: 18px;
+    }
+
+    .sousfamille-item {
+      margin: 4px 0;
+      color: #444;
+    }
+
     .travaux-btn {
       background: none;
       border: none;
@@ -67,10 +102,28 @@
       margin-right: 8px;
       vertical-align: middle;
     }
-    .travaux-btn:hover { color: #ff9800; }
-    .moyenne { color: #ffb300; font-weight: bold; margin-left: 10px; }
-    .empty { color: #888; text-align: center; margin-top: 40px; }
-    #error-message { color: red; margin-top: 20px; }
+
+    .travaux-btn:hover {
+      color: #ff9800;
+    }
+
+    .moyenne {
+      color: #ffb300;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+
+    .empty {
+      color: #888;
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    #error-message {
+      color: red;
+      margin-top: 20px;
+    }
+
     .btn {
       display: block;
       margin: 20px auto 0 auto;
@@ -85,7 +138,10 @@
       box-shadow: 0 2px 8px #4caf5033;
       transition: background 0.2s;
     }
-    .btn:hover { background: #45a049; }
+
+    .btn:hover {
+      background: #45a049;
+    }
   </style>
 </head>
 
@@ -107,104 +163,198 @@
   </div>
 
   <script>
+    console.log("Script Recap Mobil-Home chargé et démarré");
     // ⚡️ Met ici TES URL déployées en WebApp
-const URL_DATA = "https://script.google.com/macros/s/AKfycbz7J7fOqS9I0r8BrX8Jv7EasTrbQ_M969qixrNZzNi3Z59lGdhV20rtkXxD_0NaEhwX/exec";
-const URL_TRAVAUX = "https://script.google.com/macros/s/AKfycbwMnuc_C_qXhogxLWGJaN75ZRr_plDGazSE14pHVoSQwNkmUi-aXQZrEPz5fCycdl7P/exec";
+    const URL_DATA = "https://script.google.com/macros/s/AKfycbz7J7fOqS9I0r8BrX8Jv7EasTrbQ_M969qixrNZzNi3Z59lGdhV20rtkXxD_0NaEhwX/exec";
+    const URL_TRAVAUX = "https://script.google.com/macros/s/AKfycbyBZJ82avKS_w7gfP_mZKsNxHEX_fCUuRqmT-8FsaTVibysbba31PhYasW0HAmaoHFO/exec";
 
-    let allRows = [];
-    let filterMode = "numero"; // mode par défaut
+let allRows = [];
+let travauxDemandes = new Set();
+let filterMode = "numero";
 
-    // ====== Récupération des données ======
-    async function fetchData() {
-      const errorDiv = document.getElementById("error-message");
-      errorDiv.textContent = "";
-      try {
-        const res = await fetch(URL_DATA);
-        if (!res.ok) {
-          const text = await res.text();
-          errorDiv.textContent = `Erreur connexion : ${res.status} ${res.statusText}\nRéponse brute : ${text}`;
-          return [];
-        }
-        const data = await res.json();
-        const rows = Array.isArray(data) ? data : (data.values ? data.values : []);
-        return rows.filter(r => r[0] && r[1]).slice(1);
-      } catch (err) {
-        errorDiv.textContent = "Erreur de connexion au serveur Google Apps Script : " + err;
-        return [];
-      }
+async function fetchData() {
+  const errorDiv = document.getElementById("error-message");
+  errorDiv.textContent = "";
+  try {
+    const res = await fetch(URL_DATA);
+    if (!res.ok) {
+      const text = await res.text();
+      errorDiv.textContent = `Erreur connexion : ${res.status} ${res.statusText}\nRéponse brute : ${text}`;
+      return [];
     }
+    const data = await res.json();
+    const rows = Array.isArray(data) ? data : (data.values ? data.values : []);
+    return rows.filter(r => r[0] && r[1]).slice(1);
+  } catch (err) {
+    errorDiv.textContent = "Erreur de connexion au serveur Google Apps Script : " + err;
+    return [];
+  }
+}
+
+let travauxDemandesMap = new Map();
+
+async function fetchTravauxDemandes() {
+  try {
+    const res = await fetch(URL_TRAVAUX);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const travauxRows = Array.isArray(data) ? data.slice(1) : (data.values ? data.values.slice(1) : []);
+    travauxDemandesMap = new Map(
+      travauxRows.map(row => [
+        [row[2], row[3], row[4], row[5]].map(v => String(v || "").trim().toLowerCase()).join("|||"),
+        Number(row[8]) // colonne Travaux ok
+      ])
+    );
+    return travauxRows;
+  } catch (err) {
+    alert("Erreur lors de la requête GET Travaux : " + err);
+    return [];
+  }
+}
+
+async function init() {
+  allRows = await fetchData();
+  const travauxRows = await fetchTravauxDemandes();
+  travauxDemandes = new Set(
+    travauxRows.map(row =>
+      [row[2], row[3], row[4], row[5]].map(v => String(v || "").trim().toLowerCase()).join("|||")
+    )
+  );
+  console.log("Appel renderListview depuis init, allRows.length =", allRows.length);
+renderListview(allRows);
+}
+init();
 
     // ====== Affichage de la liste ======
-    function renderListview(rows) {
-      if (!rows.length) {
-        document.getElementById("listview").innerHTML = '<div class="empty">Aucune donnée disponible.</div>';
-        return;
+function renderListview(rows) {
+  console.log("renderListview appelée, rows.length =", rows.length);
+  const listview = document.getElementById("listview");
+  listview.innerHTML = "";
+
+  if (!rows.length) {
+    listview.innerHTML = '<div class="empty">Aucune donnée disponible.</div>';
+    return;
+  }
+
+  // Calcul des regroupements et moyennes
+  let regrouped = {}, etoilesSum = {}, etoilesCount = {};
+  rows.forEach(row => {
+    let [type, numero, famille, sousfamille, moyenne] = row;
+    type = String(type).trim().toUpperCase();
+    famille = String(famille).trim().toUpperCase();
+    numero = String(numero).trim();
+    if (!type || !numero || !famille) return;
+
+    const key = `${type}|||${numero}`;
+    if (!etoilesCount.hasOwnProperty(key)) {
+      etoilesCount[key] = 0;
+      etoilesSum[key] = 0;
+    }
+
+    if (famille === "MOYENNE") {
+      const val = Number(moyenne);
+      if (val > 0) {
+        etoilesSum[key] += val;
+        etoilesCount[key] += 1;
       }
-      // Tri par type + numéro
-      rows.sort((a, b) => {
-        const typeCompare = String(a[0]).localeCompare(String(b[0]));
-        if (typeCompare !== 0) return typeCompare;
-        return (isNaN(a[1]) ? a[1] : Number(a[1])) - (isNaN(b[1]) ? b[1] : Number(b[1]));
-      });
+    } else {
+      if (!regrouped[key]) regrouped[key] = {};
+      if (!regrouped[key][famille]) regrouped[key][famille] = [];
+      regrouped[key][famille].push(sousfamille || "Aucun problème signalé");
+    }
+  });
 
-      const listview = document.getElementById("listview");
-      listview.innerHTML = "";
+  // Affichage
+  let lastType = null;
+  Object.keys(regrouped).sort().forEach(key => {
+    const [type, numero] = key.split("|||");
 
-      let regrouped = {}, etoilesSum = {}, etoilesCount = {};
-      rows.forEach(row => {
-        const [type, numero, famille, sousfamille, moyenne] = row;
-        if (!type || !numero || !famille) return;
+    // Type title
+    if (type !== lastType) {
+      const typeDiv = document.createElement("div");
+      typeDiv.className = "type-title";
+      typeDiv.textContent = type;
+      listview.appendChild(typeDiv);
+      lastType = type;
+    }
 
-        if (famille === "MOYENNE") {
-          const key = `${type}|||${numero}`;
-          const val = Number(moyenne) || 0;
-          etoilesSum[key] = (etoilesSum[key] || 0) + val;
-          etoilesCount[key] = (etoilesCount[key] || 0) + 1;
+    // Numéro block
+    const numeroBlock = document.createElement("div");
+    numeroBlock.className = "numero-block";
+    const numeroTitle = document.createElement("div");
+    numeroTitle.className = "numero-title";
+    numeroTitle.textContent = `Numéro : ${numero}`;
+    numeroBlock.appendChild(numeroTitle);
+
+    // Familles
+    Object.keys(regrouped[key]).forEach(famille => {
+      const familleDiv = document.createElement("div");
+      familleDiv.className = "famille-title";
+      familleDiv.textContent = famille;
+      numeroBlock.appendChild(familleDiv);
+
+      const ul = document.createElement("ul");
+      ul.className = "sousfamille-list";
+      regrouped[key][famille].forEach(sousfamille => {
+        const li = document.createElement("li");
+        li.className = "sousfamille-item";
+        const sousfamilleClean = String(sousfamille).trim().toLowerCase();
+
+        // Cas spécial : aucun problème signalé
+        if (sousfamilleClean === "aucun problème signalé") {
+          li.style.color = "#43a047";
+          li.style.fontWeight = "bold";
+          li.textContent = "Aucun problème signalé";
+        }
+        // Cas spécial : rien à signaler ou aucun problème (on n'affiche pas)
+        else if (
+          sousfamilleClean === "rien à signaler pour ce mobilhome" ||
+          sousfamilleClean === "aucun problème"
+        ) {
           return;
         }
-        if (!sousfamille) return;
-        regrouped[`${type}|||${numero}|||${famille}|||${sousfamille}`] =
-          (regrouped[`${type}|||${numero}|||${famille}|||${sousfamille}`] || 0) + 1;
-      });
+        // Travaux effectués
+        else {
+          const travauxKey = [type, numero, famille, sousfamille].map(v => (v || "").trim().toLowerCase()).join("|||");
+          const travauxOk = travauxDemandesMap.get(travauxKey);
+          const ficheDejaDemandee = travauxDemandesMap.has(travauxKey);
 
-      let lastType = null, lastNumero = null, numeroBlock = null, familleBlocks = {}, currentMoyenne = "";
-
-      Object.keys(regrouped).forEach(key => {
-        const [type, numero, famille, sousfamille] = key.split("|||");
-        const count = regrouped[key];
-
-        if (type !== lastType) {
-          listview.innerHTML += `<div class="type-title">${type}</div>`;
-          lastType = type; lastNumero = null;
-        }
-        if (numero !== lastNumero) {
-          if (numeroBlock && etoilesCount[`${lastType}|||${lastNumero}`]) {
-            const moyenneCalculee = (etoilesSum[`${lastType}|||${lastNumero}`] / etoilesCount[`${lastType}|||${lastNumero}`]).toFixed(0);
-            numeroBlock.innerHTML += `<div class="moyenne">Moyenne calculée : ${moyenneCalculee} ⭐</div>`;
-            currentMoyenne = moyenneCalculee;
+          if (travauxOk === 1) {
+            li.innerHTML = `
+              <span style="color:#1976d2;font-weight:bold;">Travaux effectués</span>
+              <span style="color:#43a047;font-size:1.2em;margin-left:8px;">&#10004;</span>
+              <span style="color:#1976d2;margin-left:8px;">${sousfamille}</span>
+            `;
+          } else {
+            li.innerHTML = `
+              <button class="travaux-btn" title="Travaux"
+                onclick="showTravauxForm('${type}','${numero}','${famille}','${sousfamille.replace(/'/g, "\\'")}', '')">🛠️</button>
+                ${ficheDejaDemandee ? '<span title="Fiche travaux déjà demandée" style="color:#43a047;font-size:1.2em;margin-left:4px;">&#10004;</span>' : ''}
+              ${sousfamille}${ficheDejaDemandee ? " <span style='color:#43a047;'>(fiche travaux déjà demandée)</span>" : ""}
+            `;
           }
-          numeroBlock = document.createElement("div");
-          numeroBlock.className = "numero-block";
-          numeroBlock.innerHTML = `<div class="numero-title">Numéro : ${numero}</div>`;
-          listview.appendChild(numeroBlock);
-          familleBlocks = {};
-          lastNumero = numero;
         }
-        if (famille !== "MOYENNE" && !familleBlocks[famille]) {
-          familleBlocks[famille] = document.createElement("div");
-          familleBlocks[famille].innerHTML = `<div class="famille-title">${famille}</div><ul class="sousfamille-list"></ul>`;
-          numeroBlock.appendChild(familleBlocks[famille]);
-        }
-        if (famille !== "MOYENNE") {
-          const ul = familleBlocks[famille].querySelector(".sousfamille-list");
-          ul.innerHTML += `<li class="sousfamille-item">
-            <button class="travaux-btn" title="Travaux"
-              onclick="showTravauxForm('${type}','${numero}','${famille}','${sousfamille.replace(/'/g,"\\'")}', '${currentMoyenne}')">🛠️</button>
-            ${sousfamille}${count > 1 ? " <span style='color:#1976d2'>(x" + count + ")</span>" : ""}
-          </li>`;
-        }
+        ul.appendChild(li);
       });
+      numeroBlock.appendChild(ul);
+    });
+
+    // Moyenne
+    const moyenneDiv = document.createElement("div");
+    moyenneDiv.className = "moyenne";
+    if (etoilesCount[key]) {
+      const moyenneCalculee = (etoilesSum[key] / etoilesCount[key]).toFixed(0);
+      console.log("Affichage moyenne pour", key, ":", moyenneCalculee, "⭐");
+      moyenneDiv.textContent = `Moyenne calculée : ${moyenneCalculee} ⭐`;
+    } else {
+      moyenneDiv.innerHTML = `<span style="font-size:1.2em;vertical-align:middle;">&#11088;</span> Aucune étoile cochée à ce jour`;
+      moyenneDiv.style.color = "#888";
     }
+    numeroBlock.appendChild(moyenneDiv);
+
+    listview.appendChild(numeroBlock);
+  });
+}
 
     // ====== Formulaire Travaux ======
     function showTravauxForm(type, numero, famille, sousfamille, moyenne) {
@@ -236,6 +386,16 @@ const URL_TRAVAUX = "https://script.google.com/macros/s/AKfycbwMnuc_C_qXhogxLWGJ
         const choix = document.querySelector('#travauxForm input[name="choix"]:checked');
         if (!choix) return;
 
+        // Décharge le modal AVANT l'envoi
+        document.body.removeChild(modal);
+
+        // Ajoute un indicateur d'envoi non bloquant
+        const sendingDiv = document.createElement('div');
+        sendingDiv.id = 'sending-indicator';
+        sendingDiv.style = "position:fixed;bottom:24px;right:24px;background:#1976d2;color:#fff;padding:14px 28px;border-radius:8px;box-shadow:0 2px 8px #1976d233;z-index:9999;font-size:1.1em;";
+        sendingDiv.textContent = "Envoi de la fiche travaux en cours...";
+        document.body.appendChild(sendingDiv);
+
         let dateFinObj = new Date(now);
         switch (choix.value) {
           case "Urgent à faire de suite": dateFinObj.setHours(dateFinObj.getHours() + 1); break;
@@ -255,20 +415,39 @@ const URL_TRAVAUX = "https://script.google.com/macros/s/AKfycbwMnuc_C_qXhogxLWGJ
           dateDemande: dateClick,
           dateFinTravaux: dateFin,
           type, num: numero, famille, sousFamille: sousfamille,
-          tempsRestant, travauxEnCours: choix.value
+          tempsRestant, travauxEnCours: choix.value,
+          travauxOk: 0
         };
 
-        fetch(URL_TRAVAUX, { method: "POST", body: new URLSearchParams(postData) })
-          .then(res => res.json())
-          .then(data => {
-            alert(data.result === "ok" ? "Travaux ajouté !" : "Erreur lors de l'ajout : " + (data.error || "inconnue"));
-            document.body.removeChild(modal);
-          })
-          .catch(err => {
-            alert("Erreur réseau : " + err);
-            document.body.removeChild(modal);
-          });
+fetch(URL_TRAVAUX, { method: "POST", body: new URLSearchParams(postData) })
+  .then(res => {
+    // Ajoute une message box pour voir la réponse brute
+    res.text().then(txt => {
+      //alert("Réponse brute du serveur :\n" + txt);
+      try {
+        const data = JSON.parse(txt);
+        sendingDiv.textContent = data.result === "ok"
+          ? "Fiche travaux envoyée avec succès !"
+          : "Erreur lors de l'envoi : " + (data.error || "inconnue");
+      } catch (err) {
+        sendingDiv.textContent = "Réponse non JSON : " + txt;
+      }
+      setTimeout(() => {
+        if (sendingDiv.parentNode) sendingDiv.parentNode.removeChild(sendingDiv);
+      }, 3000);
+    });
+    // Retourne la promesse pour la chaîne
+    return res;
+  })
+  .catch(err => {
+    alert("Erreur réseau : " + err);
+    sendingDiv.textContent = "Erreur réseau : " + err;
+    setTimeout(() => {
+      if (sendingDiv.parentNode) sendingDiv.parentNode.removeChild(sendingDiv);
+    }, 3000);
+  });
       };
+
     }
 
     // ====== Filtres & recherche ======
@@ -290,12 +469,13 @@ const URL_TRAVAUX = "https://script.google.com/macros/s/AKfycbwMnuc_C_qXhogxLWGJ
     document.getElementById("searchInput").addEventListener("input", e => applyFilter(e.target.value.trim().toLowerCase()));
 
     // ====== Initialisation ======
-    fetchData().then(rows => { allRows = rows; renderListview(allRows); });
+    init();
     setInterval(() => {
       if (!document.getElementById("searchInput").value.trim()) {
-        fetchData().then(rows => { allRows = rows; renderListview(allRows); });
+        init();
       }
     }, 30000);
   </script>
 </body>
+
 </html>
