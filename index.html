@@ -11,13 +11,11 @@
       margin: 0;
       padding: 0;
     }
-
     h1 {
       text-align: center;
       margin-top: 30px;
       color: #1976d2;
     }
-
     .container {
       max-width: 900px;
       margin: 40px auto;
@@ -26,12 +24,10 @@
       box-shadow: 0 2px 16px #1976d233;
       padding: 30px;
     }
-
     .search-bar {
       margin-bottom: 20px;
       text-align: center;
     }
-
     .search-bar input {
       width: 50%;
       padding: 10px 15px;
@@ -40,7 +36,6 @@
       font-size: 1em;
       outline: none;
     }
-
     .search-bar button {
       margin-left: 10px;
       padding: 10px 15px;
@@ -51,49 +46,19 @@
       font-size: 0.95em;
       cursor: pointer;
     }
-
-    .search-bar button:hover {
-      background: #125a9c;
-    }
-
-    .listview {
-      margin-top: 20px;
-    }
-
-    .type-title {
-      font-size: 1.3em;
-      color: #1976d2;
-      margin-top: 30px;
-    }
-
+    .search-bar button:hover { background: #125a9c; }
+    .listview { margin-top: 20px; }
+    .type-title { font-size: 1.3em; color: #1976d2; margin-top: 30px; }
     .numero-block {
       margin: 18px 0 28px 0;
       padding: 16px 24px;
       background: #e3f2fd;
       border-radius: 8px;
     }
-
-    .numero-title {
-      font-size: 1.1em;
-      color: #333;
-      margin-bottom: 8px;
-    }
-
-    .famille-title {
-      font-weight: bold;
-      color: #1565c0;
-      margin-top: 10px;
-    }
-
-    .sousfamille-list {
-      margin-left: 18px;
-    }
-
-    .sousfamille-item {
-      margin: 4px 0;
-      color: #444;
-    }
-
+    .numero-title { font-size: 1.1em; color: #333; margin-bottom: 8px; }
+    .famille-title { font-weight: bold; color: #1565c0; margin-top: 10px; }
+    .sousfamille-list { margin-left: 18px; }
+    .sousfamille-item { margin: 4px 0; color: #444; }
     .travaux-btn {
       background: none;
       border: none;
@@ -102,28 +67,10 @@
       margin-right: 8px;
       vertical-align: middle;
     }
-
-    .travaux-btn:hover {
-      color: #ff9800;
-    }
-
-    .moyenne {
-      color: #ffb300;
-      font-weight: bold;
-      margin-left: 10px;
-    }
-
-    .empty {
-      color: #888;
-      text-align: center;
-      margin-top: 40px;
-    }
-
-    #error-message {
-      color: red;
-      margin-top: 20px;
-    }
-
+    .travaux-btn:hover { color: #ff9800; }
+    .moyenne { color: #ffb300; font-weight: bold; margin-left: 10px; }
+    .empty { color: #888; text-align: center; margin-top: 40px; }
+    #error-message { color: red; margin-top: 20px; }
     .btn {
       display: block;
       margin: 20px auto 0 auto;
@@ -138,10 +85,7 @@
       box-shadow: 0 2px 8px #4caf5033;
       transition: background 0.2s;
     }
-
-    .btn:hover {
-      background: #45a049;
-    }
+    .btn:hover { background: #45a049; }
   </style>
 </head>
 
@@ -150,9 +94,9 @@
   <button class="btn" onclick="window.open('https://nonodev38.github.io/check_mobil_home/', 'listeMobilHomeWindow')">
     Ouvrir Check MobilHome
   </button>
-  <div class="container">
 
-    <!-- 🔍 Barre de recherche avec bouton toggle -->
+  <div class="container">
+    <!-- 🔍 Barre de recherche -->
     <div class="search-bar">
       <input type="text" id="searchInput" placeholder="Rechercher par numéro...">
       <button id="toggleFilter">Filtrer par famille</button>
@@ -160,79 +104,57 @@
 
     <div id="listview" class="listview"></div>
     <div id="error-message"></div>
-
-
-
   </div>
 
   <script>
+    // ⚡️ Met ici TES URL déployées en WebApp
+const URL_DATA = "https://script.google.com/macros/s/AKfycbz7J7fOqS9I0r8BrX8Jv7EasTrbQ_M969qixrNZzNi3Z59lGdhV20rtkXxD_0NaEhwX/exec";
+const URL_TRAVAUX = "https://script.google.com/macros/s/AKfycbwMnuc_C_qXhogxLWGJaN75ZRr_plDGazSE14pHVoSQwNkmUi-aXQZrEPz5fCycdl7P/exec";
 
+    let allRows = [];
+    let filterMode = "numero"; // mode par défaut
 
-    const URL = "https://script.google.com/macros/s/AKfycbz7J7fOqS9I0r8BrX8Jv7EasTrbQ_M969qixrNZzNi3Z59lGdhV20rtkXxD_0NaEhwX/exec";
-    let allRows = []; // stocke toutes les données brutes
-    let filterMode = "numero"; // 🔄 mode de recherche par défaut
-
-
-
+    // ====== Récupération des données ======
     async function fetchData() {
       const errorDiv = document.getElementById("error-message");
       errorDiv.textContent = "";
       try {
-        const res = await fetch(URL);
+        const res = await fetch(URL_DATA);
         if (!res.ok) {
           const text = await res.text();
-          errorDiv.textContent = `Erreur de connexion : ${res.status} ${res.statusText}\nRéponse brute : ${text}`;
+          errorDiv.textContent = `Erreur connexion : ${res.status} ${res.statusText}\nRéponse brute : ${text}`;
           return [];
         }
-        try {
-          const data = await res.json();
-          const rows = Array.isArray(data) ? data : (data.values ? data.values : []);
-          return rows.filter(r => r[0] !== undefined && r[1] !== undefined && r[0] !== "" && r[1] !== "").slice(1);
-        } catch (jsonErr) {
-          const text = await res.text();
-          errorDiv.textContent = "Erreur lors du parsing JSON : " + jsonErr + "\nRéponse brute : " + text;
-          return [];
-        }
+        const data = await res.json();
+        const rows = Array.isArray(data) ? data : (data.values ? data.values : []);
+        return rows.filter(r => r[0] && r[1]).slice(1);
       } catch (err) {
         errorDiv.textContent = "Erreur de connexion au serveur Google Apps Script : " + err;
         return [];
       }
     }
 
+    // ====== Affichage de la liste ======
     function renderListview(rows) {
       if (!rows.length) {
         document.getElementById("listview").innerHTML = '<div class="empty">Aucune donnée disponible.</div>';
         return;
       }
+      // Tri par type + numéro
       rows.sort((a, b) => {
-        // Tri par type (a[0]), puis par numéro (a[1] en nombre si possible)
         const typeCompare = String(a[0]).localeCompare(String(b[0]));
         if (typeCompare !== 0) return typeCompare;
-        const numA = isNaN(a[1]) ? a[1] : Number(a[1]);
-        const numB = isNaN(b[1]) ? b[1] : Number(b[1]);
-        if (numA < numB) return -1;
-        if (numA > numB) return 1;
-        return 0;
+        return (isNaN(a[1]) ? a[1] : Number(a[1])) - (isNaN(b[1]) ? b[1] : Number(b[1]));
       });
 
       const listview = document.getElementById("listview");
       listview.innerHTML = "";
-      let currentType = "", currentNumero = "";
-      let numeroBlock = null;
-      let familleBlocks = {};
-      let currentFamille = "";
-      let currentMoyenne = "";
 
-      // Regroupement des sous-familles et calcul des moyennes
-      let regrouped = {};
-      let etoilesSum = {};
-      let etoilesCount = {};
-
+      let regrouped = {}, etoilesSum = {}, etoilesCount = {};
       rows.forEach(row => {
         const [type, numero, famille, sousfamille, moyenne] = row;
         if (!type || !numero || !famille) return;
 
-        // On ignore la famille "MOYENNE" pour l'affichage, mais on calcule la somme des étoiles
         if (famille === "MOYENNE") {
           const key = `${type}|||${numero}`;
           const val = Number(moyenne) || 0;
@@ -241,28 +163,24 @@
           return;
         }
         if (!sousfamille) return;
-        const key = `${type}|||${numero}|||${famille}|||${sousfamille}`;
-        regrouped[key] = (regrouped[key] || 0) + 1;
+        regrouped[`${type}|||${numero}|||${famille}|||${sousfamille}`] =
+          (regrouped[`${type}|||${numero}|||${famille}|||${sousfamille}`] || 0) + 1;
       });
 
-      // Construction de l'affichage
-      let lastType = null, lastNumero = null;
+      let lastType = null, lastNumero = null, numeroBlock = null, familleBlocks = {}, currentMoyenne = "";
+
       Object.keys(regrouped).forEach(key => {
         const [type, numero, famille, sousfamille] = key.split("|||");
         const count = regrouped[key];
 
-        // Nouveau type
         if (type !== lastType) {
           listview.innerHTML += `<div class="type-title">${type}</div>`;
-          lastType = type;
-          lastNumero = null;
+          lastType = type; lastNumero = null;
         }
-        // Nouveau numéro
         if (numero !== lastNumero) {
           if (numeroBlock && etoilesCount[`${lastType}|||${lastNumero}`]) {
             const moyenneCalculee = (etoilesSum[`${lastType}|||${lastNumero}`] / etoilesCount[`${lastType}|||${lastNumero}`]).toFixed(0);
-            const avis = etoilesCount[`${lastType}|||${lastNumero}`];
-            numeroBlock.innerHTML += `<div class="moyenne">Moyenne calculée : ${moyenneCalculee} ⭐ <span style="color:#1976d2;">(${avis} avis)</span></div>`;
+            numeroBlock.innerHTML += `<div class="moyenne">Moyenne calculée : ${moyenneCalculee} ⭐</div>`;
             currentMoyenne = moyenneCalculee;
           }
           numeroBlock = document.createElement("div");
@@ -272,213 +190,112 @@
           familleBlocks = {};
           lastNumero = numero;
         }
-        // Famille (on ignore "MOYENNE")
         if (famille !== "MOYENNE" && !familleBlocks[famille]) {
           familleBlocks[famille] = document.createElement("div");
           familleBlocks[famille].innerHTML = `<div class="famille-title">${famille}</div><ul class="sousfamille-list"></ul>`;
           numeroBlock.appendChild(familleBlocks[famille]);
-          currentFamille = famille;
         }
-        // Sous-famille avec compteur + bouton travaux
         if (famille !== "MOYENNE") {
           const ul = familleBlocks[famille].querySelector(".sousfamille-list");
-          const sousfamilleClean = (sousfamille || "").trim().toLowerCase();
           ul.innerHTML += `<li class="sousfamille-item">
-        ${sousfamilleClean !== "rien à signaler pour ce mobilhome" && sousfamilleClean !== "aucun problème"
-              ? `<button class="travaux-btn" title="Travaux"
-              onclick="showTravauxForm('${type}','${numero}','${famille}','${sousfamille.replace(/'/g, "\\'")}', '${currentMoyenne}')">🛠️</button>`
-              : ""}
-        ${sousfamille}${count > 1 ? " <span style='color:#1976d2'>(x" + count + ")</span>" : ""}
-      </li>`;
+            <button class="travaux-btn" title="Travaux"
+              onclick="showTravauxForm('${type}','${numero}','${famille}','${sousfamille.replace(/'/g,"\\'")}', '${currentMoyenne}')">🛠️</button>
+            ${sousfamille}${count > 1 ? " <span style='color:#1976d2'>(x" + count + ")</span>" : ""}
+          </li>`;
         }
       });
-
-      // Affiche la moyenne calculée du dernier bloc si elle existe
-      if (numeroBlock && etoilesCount[`${lastType}|||${lastNumero}`]) {
-        const moyenneCalculee = (etoilesSum[`${lastType}|||${lastNumero}`] / etoilesCount[`${lastType}|||${lastNumero}`]).toFixed(0);
-        const avis = etoilesCount[`${lastType}|||${lastNumero}`];
-        numeroBlock.innerHTML += `<div class="moyenne">Moyenne calculée : ${moyenneCalculee} ⭐ <span style="color:#1976d2;">(${avis} avis)</span></div>`;
-        currentMoyenne = moyenneCalculee;
-      }
     }
 
+    // ====== Formulaire Travaux ======
     function showTravauxForm(type, numero, famille, sousfamille, moyenne) {
       const now = new Date();
       const dateClick = now.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
 
       const modal = document.createElement('div');
       modal.id = 'travaux-modal';
-      modal.style.position = 'fixed';
-      modal.style.top = '0';
-      modal.style.left = '0';
-      modal.style.width = '100vw';
-      modal.style.height = '100vh';
-      modal.style.background = 'rgba(0,0,0,0.4)';
-      modal.style.display = 'flex';
-      modal.style.alignItems = 'center';
-      modal.style.justifyContent = 'center';
-      modal.style.zIndex = '9999';
-
+      modal.style = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:9999;";
       modal.innerHTML = `
-    <div style="background:#fff;padding:30px 24px;border-radius:12px;min-width:300px;box-shadow:0 2px 16px #1976d233;">
-    <h2 style="margin-top:0; margin-bottom:18px;">
-      Créer Fiche Travaux Pour :
-    </h2>
-    <div style="margin-bottom:10px;">
-      <span style="display:inline-block; font-size:1.1em; color:#333; margin-right:2px;">
-        <b>${type}</b>
-      </span>
-      <span style="display:inline-block; font-size:1.1em; color:#333; margin-right:2px;">
-        <b>${numero}</b>
-      </span>
-      <span style="display:inline-block; font-size:1.1em; color:#333;">
-        <b>${famille}</b>
-      </span>
-    </div>
-    <div style="margin-bottom:18px;">
-      <span style="font-size:1.15em; color:#1976d2; font-weight:bold;">
-        ${sousfamille}
-      </span>
-    </div> 
-
-    <form id="travauxForm">
+        <div style="background:#fff;padding:30px 24px;border-radius:12px;min-width:300px;box-shadow:0 2px 16px #1976d233;">
+          <h2>Créer Fiche Travaux</h2>
+          <p><b>${type}</b> - <b>${numero}</b> - <b>${famille}</b></p>
+          <p style="color:#1976d2;font-weight:bold;">${sousfamille}</p>
+          <form id="travauxForm">
             <label><input type="radio" name="choix" value="Urgent à faire de suite"> Urgent à faire de suite</label><br>
             <label><input type="radio" name="choix" value="A faire dans la journée"> A faire dans la journée</label><br>
             <label><input type="radio" name="choix" value="A faire dans la semaine"> A faire dans la semaine</label><br>
             <label><input type="radio" name="choix" value="A faire a temps perdu"> A faire à temps perdu</label><br>
             <label><input type="radio" name="choix" value="A faire hors saison"> A faire hors saison</label><br><br>
-            <button type="submit" style="background:#1976d2;color:#fff;padding:8px 18px;border:none;border-radius:6px;cursor:pointer;">Valider</button>
-            <button type="button" onclick="document.body.removeChild(document.getElementById('travaux-modal'))" style="margin-left:10px;background:#ccc;color:#333;padding:8px 18px;border:none;border-radius:6px;cursor:pointer;">Annuler</button>
+            <button type="submit">Valider</button>
+            <button type="button" onclick="document.body.removeChild(document.getElementById('travaux-modal'))">Annuler</button>
           </form>
-        </div>
-      `;
-
+        </div>`;
       document.body.appendChild(modal);
 
       document.getElementById('travauxForm').onsubmit = function (e) {
         e.preventDefault();
         const choix = document.querySelector('#travauxForm input[name="choix"]:checked');
-        if (choix) {
-          let dateFin = "";
-          let dateFinObj = new Date(now);
+        if (!choix) return;
 
-          switch (choix.value) {
-            case "Urgent à faire de suite":
-              dateFinObj.setHours(dateFinObj.getHours() + 1);
-              dateFin = dateFinObj.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
-              break;
-            case "A faire dans la journée":
-              dateFinObj.setHours(16, 0, 0, 0);
-              dateFin = dateFinObj.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
-              break;
-            case "A faire dans la semaine":
-              dateFinObj.setDate(dateFinObj.getDate() + 7);
-              dateFin = dateFinObj.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
-              break;
-            case "A faire a temps perdu":
-              dateFinObj.setMonth(dateFinObj.getMonth() + 1);
-              dateFin = dateFinObj.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
-              break;
-            case "A faire hors saison":
-              // Si on est déjà après mars (mois > 2), on prend l'année suivante
-              let year = dateFinObj.getMonth() > 2 ? dateFinObj.getFullYear() + 1 : dateFinObj.getFullYear();
-              dateFinObj = new Date(year, 2, 1, 12, 0, 0, 0); // Mars = 2
-              dateFin = dateFinObj.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
-              break;
-          }
-
-          // Calcul du temps restant en heures arrondi
-          const tempsRestantMs = dateFinObj.getTime() - now.getTime();
-          const tempsRestant = Math.max(0, Math.round(tempsRestantMs / (1000 * 60 * 60))) + "h";
-
-          // Prépare les données à envoyer
-          const postData = {
-            
-            action: "addTravaux",
-            dateDemande: dateClick,
-            dateFinTravaux: dateFin,
-            type: type,
-            num: numero,
-            famille: famille,
-            sousFamille: sousfamille,
-            tempsRestant: tempsRestant,
-            travauxEnCours: choix.value
-          };
-
-          // Envoi POST vers Google Apps Script
-          fetch("https://script.google.com/macros/s/AKfycbyBZpduFbMj4a-HTEoRVZbr7R_2EKEWN7bkk4UQOZnNaGWRbiOyvKvydzhonjqX7Foz/exec", {
-            method: "POST",
-            body: new URLSearchParams(postData)
-          })
-            .then(res => res.json())
-            .then(data => {
-              if (data.result === "ok") {
-                alert("Travaux ajouté !");
-              } else {
-                alert("Erreur lors de l'ajout : " + (data.error || "inconnue"));
-              }
-              document.body.removeChild(modal);
-            })
-            .catch(err => {
-              alert("Erreur réseau : " + err);
-              document.body.removeChild(modal);
-            });
+        let dateFinObj = new Date(now);
+        switch (choix.value) {
+          case "Urgent à faire de suite": dateFinObj.setHours(dateFinObj.getHours() + 1); break;
+          case "A faire dans la journée": dateFinObj.setHours(16, 0, 0, 0); break;
+          case "A faire dans la semaine": dateFinObj.setDate(dateFinObj.getDate() + 7); break;
+          case "A faire a temps perdu": dateFinObj.setMonth(dateFinObj.getMonth() + 1); break;
+          case "A faire hors saison":
+            let year = dateFinObj.getMonth() > 2 ? dateFinObj.getFullYear() + 1 : dateFinObj.getFullYear();
+            dateFinObj = new Date(year, 2, 1, 12, 0, 0, 0);
+            break;
         }
+        const dateFin = dateFinObj.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+        const tempsRestant = Math.max(0, Math.round((dateFinObj.getTime() - now.getTime()) / (1000 * 60 * 60))) + "h";
+
+        const postData = {
+          action: "addTravaux",
+          dateDemande: dateClick,
+          dateFinTravaux: dateFin,
+          type, num: numero, famille, sousFamille: sousfamille,
+          tempsRestant, travauxEnCours: choix.value
+        };
+
+        fetch(URL_TRAVAUX, { method: "POST", body: new URLSearchParams(postData) })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.result === "ok" ? "Travaux ajouté !" : "Erreur lors de l'ajout : " + (data.error || "inconnue"));
+            document.body.removeChild(modal);
+          })
+          .catch(err => {
+            alert("Erreur réseau : " + err);
+            document.body.removeChild(modal);
+          });
       };
     }
 
-
-    // 🔍 Recherche en fonction du mode
+    // ====== Filtres & recherche ======
     function applyFilter(query) {
-      if (!query) {
-        renderListview(allRows);
-      } else {
-        let filtered;
-        if (filterMode === "numero") {
-          filtered = allRows.filter(r => String(r[1]).toLowerCase().includes(query));
-        } else {
-          filtered = allRows.filter(r => String(r[2]).toLowerCase().includes(query));
-        }
+      if (!query) renderListview(allRows);
+      else {
+        const filtered = (filterMode === "numero")
+          ? allRows.filter(r => String(r[1]).toLowerCase().includes(query))
+          : allRows.filter(r => String(r[2]).toLowerCase().includes(query));
         renderListview(filtered);
       }
     }
-
-    // 🎛 Toggle du filtre
     document.getElementById("toggleFilter").addEventListener("click", () => {
-      filterMode = filterMode === "numero" ? "famille" : "numero";
-
-      // Mise à jour du bouton et du placeholder
-      document.getElementById("toggleFilter").textContent =
-        filterMode === "numero" ? "Filtrer par famille" : "Filtrer par numéro";
-      document.getElementById("searchInput").placeholder =
-        filterMode === "numero" ? "Rechercher par numéro..." : "Rechercher par famille...";
-
-      // Relancer le filtre sur la nouvelle base
+      filterMode = (filterMode === "numero") ? "famille" : "numero";
+      document.getElementById("toggleFilter").textContent = filterMode === "numero" ? "Filtrer par famille" : "Filtrer par numéro";
+      document.getElementById("searchInput").placeholder = filterMode === "numero" ? "Rechercher par numéro..." : "Rechercher par famille...";
       applyFilter(document.getElementById("searchInput").value.trim().toLowerCase());
     });
+    document.getElementById("searchInput").addEventListener("input", e => applyFilter(e.target.value.trim().toLowerCase()));
 
-    // ⌨ Recherche en temps réel
-    document.getElementById("searchInput").addEventListener("input", (e) => {
-      const query = e.target.value.trim().toLowerCase();
-      applyFilter(query);
-    });
-
-    // Appel initial + rafraîchissement
-    fetchData().then(rows => {
-      allRows = rows;
-      renderListview(allRows);
-    });
+    // ====== Initialisation ======
+    fetchData().then(rows => { allRows = rows; renderListview(allRows); });
     setInterval(() => {
-      // Empêche le rafraîchissement si la zone de recherche n'est pas vide
-      const searchValue = document.getElementById("searchInput").value.trim();
-      if (!searchValue) {
-        fetchData().then(rows => {
-          allRows = rows;
-          renderListview(allRows);
-        });
+      if (!document.getElementById("searchInput").value.trim()) {
+        fetchData().then(rows => { allRows = rows; renderListview(allRows); });
       }
     }, 30000);
   </script>
 </body>
-
 </html>
