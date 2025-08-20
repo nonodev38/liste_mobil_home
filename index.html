@@ -194,7 +194,7 @@
     console.log("Script Recap Mobil-Home chargé et démarré");
     // ⚡️ Met ici TES URL déployées en WebApp
     const URL_DATA = "https://script.google.com/macros/s/AKfycbz7J7fOqS9I0r8BrX8Jv7EasTrbQ_M969qixrNZzNi3Z59lGdhV20rtkXxD_0NaEhwX/exec";
-    const URL_TRAVAUX = "https://script.google.com/macros/s/AKfycbweaqiLce1oVK__SZWr_X_GG-Z9rTZQKAENzii1EwXOGy-KYqinKkFeoJdq9EJecwXz/exec";
+    const URL_TRAVAUX = "https://script.google.com/macros/s/AKfycbwGGBmofpa2reyUgxz1P5OVWJIkpwJtKNvp9PX3lnTaZsktPCKMDtD4tV-8N2UxX-0O/exec";
 
     let allRows = [];
     let travauxDemandes = new Set();
@@ -542,7 +542,8 @@ document.getElementById('travauxForm').onsubmit = function (e) {
     dateFinTravaux: dateFin,
     type, num: numero, famille, sousFamille: sousfamille,
     tempsRestant, travauxEnCours: travauxEnCoursValue,
-    travauxOk: 0
+    travauxOk: 0,
+    meteoPref: "Peu importe" 
   };
 
   fetch(URL_TRAVAUX, { method: "POST", body: new URLSearchParams(postData) })
